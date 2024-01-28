@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields, PathArguments, Type};
 
-#[proc_macro_derive(BuildNew, attributes(new, set, set_some))]
+#[proc_macro_derive(BuildNew, attributes(new, new_into, set, set_some, set_into))]
 pub fn build_new(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -37,6 +37,11 @@ pub fn build_new(input: TokenStream) -> TokenStream {
                     new_fields.push(quote!(#ident));
                     already_in_fields = true;
                 }
+                "new_into" => {
+                    new_args.push(quote!(#ident: impl Into<#ty>));
+                    new_fields.push(quote!(#ident: #ident.into()));
+                    already_in_fields = true;
+                }
                 "set" => {
                     setters.push(quote! {
                         pub fn #ident(mut self, #ident: #ty) -> Self {
@@ -62,6 +67,14 @@ pub fn build_new(input: TokenStream) -> TokenStream {
                     setters.push(quote! {
                         pub fn #ident(mut self, #ident: #inner_type) -> Self {
                             self.#ident = Some(#ident);
+                            self
+                        }
+                    });
+                }
+                "set_into" => {
+                    setters.push(quote! {
+                        pub fn #ident<T: Into<#ty>>(mut self, #ident: T) -> Self {
+                            self.#ident = #ident.into();
                             self
                         }
                     });
