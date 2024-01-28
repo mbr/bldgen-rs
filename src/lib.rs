@@ -1,10 +1,9 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Field, Fields, PathArguments, Type};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, PathArguments, Type};
 
 #[proc_macro_derive(BuildNew, attributes(new, set, set_some))]
 pub fn build_new(input: TokenStream) -> TokenStream {
-    // Parse the input tokens into a syntax tree
     let input = parse_macro_input!(input as DeriveInput);
 
     let name = input.ident;
@@ -76,7 +75,6 @@ pub fn build_new(input: TokenStream) -> TokenStream {
         }
     }
 
-    // Build the output, possibly using quasi-quotation
     let expanded = quote! {
         impl #generics #name #generics {
             pub fn new(#(#new_args ,)*) -> Self {
@@ -89,18 +87,5 @@ pub fn build_new(input: TokenStream) -> TokenStream {
         }
     };
 
-    eprintln!("{}", expanded);
-
-    // Hand the output tokens back to the compiler
     TokenStream::from(expanded)
-}
-
-fn has_new(field: &&Field) -> bool {
-    for attr in &field.attrs {
-        match &attr.meta {
-            syn::Meta::Path(p) if quote!(#p).to_string() == "new" => return true,
-            _ => (),
-        }
-    }
-    false
 }
