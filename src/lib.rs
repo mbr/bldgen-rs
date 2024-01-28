@@ -75,13 +75,21 @@ pub fn build_new(input: TokenStream) -> TokenStream {
         }
     }
 
-    let expanded = quote! {
-        impl #generics #name #generics {
+    let new_func = if new_args.is_empty() {
+        quote!()
+    } else {
+        quote! {
             pub fn new(#(#new_args ,)*) -> Self {
                 Self {
                     #(#new_fields ,)*
                 }
             }
+        }
+    };
+
+    let expanded = quote! {
+        impl #generics #name #generics {
+            #new_func
 
             #(#setters)*
         }
